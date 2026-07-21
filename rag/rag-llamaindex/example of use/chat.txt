@@ -1,0 +1,153 @@
+user: what do you know about the uv run notebooklm-serve?
+
+assistant: 🔍 The indexed documentation does not contain a clear answer.
+
+⚠️ *Low confidence answer (top score: 0.35)*
+
+I don't have enough information.
+
+---
+*Best match score: 0.35*
+
+user: what do you know about the kiro-seering?
+
+assistant: ⚠️ *Low confidence answer (top score: 0.38)*
+
+The Kiro-Steering project is centered around the game "Spirit of Kiro," which is an infinite crafting workshop game that showcases AI-powered game development. Key features include:
+
+- **Infinite Item Generation**: Unique items with AI-generated attributes.
+- **Dynamic Crafting System**: Realistic crafting mechanics enhanced by AI.
+- **Intelligent Appraisal**: An AI-driven system for valuing crafted goods.
+- **Real-time Multiplayer**: Utilizes a WebSocket-based client-server architecture for responsive gameplay.
+
+The core game loop involves pulling random items, crafting and modifying them, storing or selling them, and repeating the process with increasingly complex items. The game integrates AWS Bedrock models for various functionalities, including item generation, crafting logic, appraisal, and image generation. It serves as a demonstration of best practices for AI-assisted development in gaming.
+
+---
+*Best match score: 0.38*
+
+user: what the rules in this projects?
+
+assistant: The rules in this project are:
+
+1. **Environment Variables Management**: Ensure sensitive environment variables are managed securely and not committed to version control. Required env vars live in `.env` (loaded via `python-dotenv`): `ANTHROPIC_API_KEY`, `COHERE_API_KEY`, optional `FIRECRAWL_API_KEY` (enables the web search/scrape/crawl tools; without it those tools return a friendly "unavailable" message instead of failing). `.env` is gitignored — never commit it.
+
+2. **Infinite_Item_Generation**: Every item in the game is unique, generated with AI-driven attributes. Every item is unique with AI-generated names, descriptions, damage values, and quirks.
+
+3. **Root Level Organization**: Defines the top-level directory structure of the project. The structure includes:
+   - `client/` - Vue.js frontend application
+   - `server/` - Bun WebSocket server
+   - `item-images/` - Separate service for AI image generation
+   - `docs/` - Project documentation
+   - `scripts/` - Deployment and setup scripts
+   - `docker/` - Docker configuration and data
+   - `launch.ts` - Development launcher script
+
+4. **Use Bun for Development**: Bun is the primary JavaScript runtime for both client and server development. Ensure Bun is installed and configured correctly for both client and server environments.
+
+---
+*Best match score: 1.00*
+
+user: what teh desicions in that project ?
+
+assistant: The decisions in the project are as follows:
+
+1. **Dependency Management**: Implement `uv` as the dependency manager and ensure compatibility with Python version 3.13 or higher. (Last updated: 2026-07-21)
+
+2. **Use uv for Dependency Management**: Implement `uv` for managing project dependencies to ensure compatibility and ease of updates. (Last updated: 2026-07-21)
+
+3. **Runtime & Build System**: The project will utilize Bun for JavaScript runtime and Docker/Podman for containerized environments. (Last updated: 2026-07-21)
+
+4. **Decision on Infinite Item Generation**: Utilize AI models to generate unique items with distinct characteristics for each gameplay session. (Last updated: 2023-10-06)
+
+5. **Frontend Systems Architecture**: Implement a system-based architecture for the client where independent systems communicate via events to ensure modularity and scalability. (Last updated: 2023-10-06)
+
+6. **Use Bun as Runtime**: The project will use Bun as the primary runtime environment for both client and server-side JavaScript execution. (Last updated: 2023-10-05)
+
+---
+*Best match score: 1.00*
+
+user: what the latest desicion received?
+
+assistant: The latest decision received is:
+
+1. **Dependency Management**: Implement `uv` as the dependency manager and ensure compatibility with Python version 3.13 or higher. (Last updated: 2026-07-21T20:15:37.693513)
+
+---
+*Best match score: 1.00*
+
+user: what the list of the warning I need to know before I do any change in the kiro-steering project?
+
+assistant: The list of warnings you need to know before making any changes in the kiro-steering project includes:
+
+1. **MissingTestSuite**
+   - Area: Project
+   - Message: The project lacks a test suite, which is essential for ensuring code reliability and catching potential bugs early.
+   - Severity: Medium
+   - Source: AI Helper, CLAUDE.md
+
+2. **Infinite_Item_Generation_Overload**
+   - Area: Infinite Item Generation
+   - Message: The AI-generated item names and descriptions may lead to an overload of unique items, causing potential performance issues.
+   - Severity: Medium
+   - Source: AI Helper, # Product Overview - Infinite Item Generation
+
+3. **Missing Test Suite**
+   - Area: Project Setup
+   - Message: The project lacks a test suite, which is essential for ensuring code reliability and catching bugs early.
+   - Severity: Medium
+   - Source: AI Helper, CLAUDE.md
+
+4. **MissingTypeSafety**
+   - Area: Backend
+   - Message: The project uses AWS SDK without explicit TypeScript type definitions, which may lead to runtime errors.
+   - Severity: Medium
+   - Source: AI Helper, AWS SDK
+
+5. **MissingUnitTests**
+   - Area: Code Quality
+   - Message: Ensure all critical components have corresponding unit tests to maintain code reliability.
+   - Severity: Medium
+   - Source: AI Helper, Vitest
+
+6. **MissingDocumentationWarning**
+   - Area: docs/
+   - Message: The project documentation is missing detailed descriptions for the 'item-images/' service.
+   - Severity: Medium
+   - Source: AI Helper, docs/
+
+7. **MissingTypeScriptStrictMode**
+   - Area: Code Quality
+   - Message: TypeScript strict mode is not enabled, which may lead to potential type safety issues.
+   - Severity: Medium
+   - Source: AI Helper, # Technology Stack
+
+8. **Infinite_Item_Generation_Validation**
+   - Area: Item Generation
+   - Message: Ensure that AI-generated items do not produce inappropriate or offensive content.
+   - Severity: High
+   - Source: AI Helper, # Product Overview - Infinite Item Generation
+
+---
+*Best match score: 1.00*
+
+user: what the structure of the kiro-steering project?
+
+assistant: The structure of the kiro-steering project is organized as follows:
+
+## Server Structure (`server/`)
+- **handlers/**: Contains WebSocket message handlers (e.g., pull-item, sell-item).
+- **llm/**: Integrates AI functionalities (includes model.ts, prompts.ts, word-lists/).
+- **state/**: Manages data persistence (includes item-store.ts, user-store.ts).
+- **utils/**: Provides server utilities (e.g., password hashing, message formatting).
+- **iac/**: Contains Infrastructure as Code for server deployment.
+- **__tests__/**: Includes unit tests using the Bun test framework.
+
+---
+*Best match score: 0.58*
+
+user: which products the kiro-steering have?
+
+assistant: The structured data provided does not contain any information regarding "kiro-steering" or related products. Therefore, I cannot provide an answer to your question.
+
+---
+*Best match score: 1.00*

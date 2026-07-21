@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RAG Workflow — Event Flow</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --surface: #ffffff;
+    --surface-2: #efebe1;
+    --ink: #211f1b;
+    --ink-muted: #6e6a60;
+    --line: #ddd8cb;
+
+    --start: #34507a;
+    --structured: #8a5a2b;
+    --structured-wash: #f4ecdf;
+    --vector: #2f6f63;
+    --vector-wash: #e8f0ec;
+    --stop: #a1453a;
+    --stop-wash: #f8ece9;
+
+    --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --font-body: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161512;
+      --surface: #1e1c18;
+      --surface-2: #262319;
+      --ink: #f1eee6;
+      --ink-muted: #a9a398;
+      --line: #3a362b;
+
+      --start: #7ca1d1;
+      --structured: #d3985a;
+      --structured-wash: #2c2318;
+      --vector: #7cc0ac;
+      --vector-wash: #1a2823;
+      --stop: #e08476;
+      --stop-wash: #2c1c19;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161512;
+    --surface: #1e1c18;
+    --surface-2: #262319;
+    --ink: #f1eee6;
+    --ink-muted: #a9a398;
+    --line: #3a362b;
+    --start: #7ca1d1;
+    --structured: #d3985a;
+    --structured-wash: #2c2318;
+    --vector: #7cc0ac;
+    --vector-wash: #1a2823;
+    --stop: #e08476;
+    --stop-wash: #2c1c19;
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f4ef;
+    --surface: #ffffff;
+    --surface-2: #efebe1;
+    --ink: #211f1b;
+    --ink-muted: #6e6a60;
+    --line: #ddd8cb;
+    --start: #34507a;
+    --structured: #8a5a2b;
+    --structured-wash: #f4ecdf;
+    --vector: #2f6f63;
+    --vector-wash: #e8f0ec;
+    --stop: #a1453a;
+    --stop-wash: #f8ece9;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.5;
+  }
+
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+    margin: 0 0 0.9rem;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(1.7rem, 3vw, 2.35rem);
+    line-height: 1.2;
+    margin: 0 0 0.8rem;
+    text-wrap: balance;
+  }
+
+  .dek {
+    max-width: 62ch;
+    color: var(--ink-muted);
+    font-size: 1.02rem;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  /* ── legend ─────────────────────────────────────── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.4rem;
+    margin: 2.2rem 0 2.6rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 0.85rem;
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.5rem; color: var(--ink-muted); }
+  .swatch { width: 0.7rem; height: 0.7rem; border-radius: 2px; flex: none; }
+  .swatch.start { background: var(--start); }
+  .swatch.structured { background: var(--structured); }
+  .swatch.vector { background: var(--vector); }
+  .swatch.stop { background: var(--stop); border: 1px dashed var(--stop); background-clip: padding-box; }
+
+  /* ── flow spine ─────────────────────────────────── */
+  .flow { display: flex; flex-direction: column; align-items: stretch; }
+
+  .connector {
+    width: 2px;
+    height: 2.1rem;
+    background: var(--ink-muted);
+    opacity: 0.35;
+    margin: 0 auto;
+  }
+  .connector.small { height: 1.5rem; }
+
+  .pill {
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.6rem 1.3rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+  }
+  .pill-label { font-size: 0.92rem; font-weight: 600; }
+  .pill code { font-family: var(--font-mono); font-size: 0.76rem; color: var(--ink-muted); }
+
+  .node {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.05rem 1.25rem;
+  }
+
+  .step-tag {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--ink-muted);
+    letter-spacing: 0.02em;
+    margin: 0 0 0.4rem;
+  }
+  .step-tag b { color: var(--ink); font-weight: 700; }
+
+  .node h2 {
+    font-family: var(--font-body);
+    font-size: 1.02rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+  }
+
+  .node p.desc { margin: 0; color: var(--ink-muted); font-size: 0.92rem; line-height: 1.6; }
+
+  .events {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.6rem;
+    margin-top: 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+  }
+  .events .in, .events .out { padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid var(--line); }
+  .events .in { color: var(--ink-muted); }
+  .events .out { color: var(--ink); background: var(--surface-2); }
+  .events .arrow { color: var(--ink-muted); align-self: center; }
+
+  .exit-chip {
+    margin-top: 0.8rem;
+    padding-top: 0.65rem;
+    border-top: 1px dashed var(--stop);
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    font-size: 0.82rem;
+  }
+  .exit-chip .exit-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--stop);
+    white-space: nowrap;
+  }
+  .exit-chip .exit-msg { color: var(--ink-muted); font-family: var(--font-mono); font-size: 0.78rem; }
+
+  /* ── spine steps (full width, single column) ────── */
+  .spine { max-width: 640px; margin: 0 auto; width: 100%; }
+  .spine .step-tag b { color: var(--start); }
+
+  /* ── fork / merge connectors ─────────────────────── */
+  .fork, .merge { position: relative; height: 3.2rem; }
+  .fork-stem, .merge-stem {
+    position: absolute; left: 50%; width: 2px; background: var(--ink-muted); opacity: 0.35;
+  }
+  .fork-stem { top: 0; height: 50%; }
+  .merge-stem { bottom: 0; height: 50%; }
+
+  .fork-bar, .merge-bar {
+    position: absolute; top: 50%; left: 25%; right: 25%; height: 2px;
+  }
+  .fork-bar { background: var(--ink-muted); opacity: 0.35; }
+  .merge-bar { background: var(--ink-muted); opacity: 0.35; }
+
+  .fork-drop, .merge-drop { position: absolute; width: 2px; }
+  .fork-drop { top: 50%; bottom: 0; }
+  .merge-drop { top: 0; bottom: 50%; }
+  .fork-drop.left, .merge-drop.left { left: 25%; background: var(--structured); opacity: 0.7; }
+  .fork-drop.right, .merge-drop.right { right: 25%; background: var(--vector); opacity: 0.7; }
+
+  /* ── branch columns ──────────────────────────────── */
+  .branches {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .branch-col {
+    display: flex;
+    flex-direction: column;
+    padding: 1.1rem;
+    border-radius: 8px;
+  }
+  .branch-col.structured { background: var(--structured-wash); }
+  .branch-col.vector { background: var(--vector-wash); }
+
+  .branch-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.9rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid;
+  }
+  .branch-col.structured .branch-label { color: var(--structured); border-color: var(--structured); }
+  .branch-col.vector .branch-label { color: var(--vector); border-color: var(--vector); }
+
+  .branch-col .node { flex: none; }
+  .branch-col .node + .connector { margin: 0.9rem auto; }
+
+  /* ── tunables ─────────────────────────────────────── */
+  .tunables {
+    margin-top: 3rem;
+    padding: 1.3rem 1.4rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .tunables h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.15rem;
+    margin: 0 0 0.9rem;
+  }
+  .tunables dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.5rem 1.2rem;
+    margin: 0;
+  }
+  .tunables dt {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .tunables dd { margin: 0; color: var(--ink-muted); font-size: 0.88rem; }
+
+  .source-note {
+    margin-top: 2.2rem;
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+  }
+  .source-note code { font-family: var(--font-mono); }
+
+  .stack-hint {
+    display: none;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+    font-style: italic;
+    margin: 0.4rem 0;
+  }
+
+  @media (max-width: 760px) {
+    .branches { grid-template-columns: 1fr; }
+    .fork-bar, .merge-bar, .fork-drop, .merge-drop { display: none; }
+    .fork, .merge { height: 2.1rem; }
+    .fork-stem, .merge-stem { height: 100%; }
+    .stack-hint { display: block; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .node { transition: border-color 0.15s ease; }
+    .node:hover { border-color: var(--ink-muted); }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <p class="eyebrow">rag_workflow.py &middot; llama_index.core.workflow</p>
+  <h1>How one question becomes one answer</h1>
+  <p class="dek">
+    Every message the user sends runs through a six-step event workflow before a reply comes back.
+    The workflow forks after routing — one path answers from structured project data, the other
+    from semantic search over indexed docs — and every step can end the run early rather than
+    guess at an answer.
+  </p>
+
+  <div class="legend">
+    <div class="legend-item"><span class="swatch start"></span>Spine step</div>
+    <div class="legend-item"><span class="swatch structured"></span>Structured-data path</div>
+    <div class="legend-item"><span class="swatch vector"></span>Semantic-search path</div>
+    <div class="legend-item"><span class="swatch stop"></span>Early exit&nbsp;(StopEvent)</div>
+  </div>
+
+  <main class="flow">
+
+    <div class="pill">
+      <span class="pill-label">User question</span>
+      <code>message: str</code>
+    </div>
+    <div class="connector"></div>
+
+    <article class="node spine">
+      <p class="step-tag"><b>Step 1</b> &middot; validate_input</p>
+      <h2>Validate the question</h2>
+      <p class="desc">Rejects an empty message and enforces a 3–500 character range before anything touches an external service.</p>
+      <div class="events">
+        <span class="in">StartEvent</span><span class="arrow">→</span><span class="out">QueryValidatedEvent</span>
+      </div>
+      <div class="exit-chip">
+        <span class="exit-label">Exit</span>
+        <span class="exit-msg">❌ empty / too short / too long</span>
+      </div>
+    </article>
+    <div class="connector"></div>
+
+    <article class="node spine">
+      <p class="step-tag"><b>Step 2</b> &middot; route</p>
+      <h2>Choose a retrieval tool</h2>
+      <p class="desc">A <code style="font-family:var(--font-mono)">PydanticSingleSelector</code> LLM call picks, per question, between the structured data store and semantic search — no keyword rules.</p>
+      <div class="events">
+        <span class="in">QueryValidatedEvent</span><span class="arrow">→</span><span class="out">StructuredQueryEvent</span><span class="arrow">/</span><span class="out">RouterEvent</span>
+      </div>
+    </article>
+
+    <div class="fork" aria-hidden="true">
+      <div class="fork-stem"></div>
+      <div class="fork-bar"></div>
+      <div class="fork-drop left"></div>
+      <div class="fork-drop right"></div>
+    </div>
+    <p class="stack-hint">Router picks exactly one path ↓</p>
+
+    <div class="branches">
+
+      <div class="branch-col structured">
+        <p class="branch-label">Structured path</p>
+
+        <article class="node">
+          <p class="step-tag"><b>Step 3a</b> &middot; structured_retrieve</p>
+          <h2>Query the structured store</h2>
+          <p class="desc">
+            An LLM turns the question into a <code style="font-family:var(--font-mono)">StructuredQuery</code>
+            (data_type + field filters + optional since). <code style="font-family:var(--font-mono)">FileStorage</code>
+            runs it against <code style="font-family:var(--font-mono)">rules / warnings / decisions</code> JSONL — if the
+            filtered lookup returns nothing, it retries unfiltered. The LLM then writes the final answer
+            straight from the matched items.
+          </p>
+          <div class="events">
+            <span class="in">StructuredQueryEvent</span><span class="arrow">→</span><span class="out">ResponseReadyEvent</span>
+          </div>
+          <div class="exit-chip">
+            <span class="exit-label">Exit</span>
+            <span class="exit-msg">🔍 no items matched, even unfiltered</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="branch-col vector">
+        <p class="branch-label">Semantic path</p>
+
+        <article class="node">
+          <p class="step-tag"><b>Step 3</b> &middot; retrieve</p>
+          <h2>Search the vector index</h2>
+          <p class="desc">Queries Pinecone (top‑k 3). An empty result triggers one retry with a broadened query — stop-words dropped, first four tokens kept.</p>
+          <div class="events">
+            <span class="in">RouterEvent</span><span class="arrow">→</span><span class="out">NodesRetrievedEvent</span>
+          </div>
+          <div class="exit-chip">
+            <span class="exit-label">Exit</span>
+            <span class="exit-msg">🔍 nothing found, even broadened</span>
+          </div>
+        </article>
+        <div class="connector small"></div>
+
+        <article class="node">
+          <p class="step-tag"><b>Step 4</b> &middot; postprocess</p>
+          <h2>Score for confidence</h2>
+          <p class="desc">Drops nodes scoring below <code style="font-family:var(--font-mono)">0.01</code>. Marks the run confident only if the top remaining score is at least <code style="font-family:var(--font-mono)">0.55</code>.</p>
+          <div class="events">
+            <span class="in">NodesRetrievedEvent</span><span class="arrow">→</span><span class="out">NodesScoredEvent</span>
+          </div>
+          <div class="exit-chip">
+            <span class="exit-label">Exit</span>
+            <span class="exit-msg">🔍 no node clears the 0.01 floor</span>
+          </div>
+        </article>
+        <div class="connector small"></div>
+
+        <article class="node">
+          <p class="step-tag"><b>Step 5</b> &middot; synthesize</p>
+          <h2>Write the answer</h2>
+          <p class="desc"><code style="font-family:var(--font-mono)">gpt-4o-mini</code>, COMPACT mode, answers strictly from the retrieved context via the QA prompt template.</p>
+          <div class="events">
+            <span class="in">NodesScoredEvent</span><span class="arrow">→</span><span class="out">ResponseReadyEvent</span>
+          </div>
+          <div class="exit-chip">
+            <span class="exit-label">Exit</span>
+            <span class="exit-msg">⚠️ model returned an empty answer</span>
+          </div>
+        </article>
+      </div>
+
+    </div>
+
+    <div class="merge" aria-hidden="true">
+      <div class="merge-drop left"></div>
+      <div class="merge-drop right"></div>
+      <div class="merge-bar"></div>
+      <div class="merge-stem"></div>
+    </div>
+    <p class="stack-hint">Whichever branch finished continues ↓</p>
+
+    <article class="node spine">
+      <p class="step-tag"><b>Step 6</b> &middot; return_response</p>
+      <h2>Format the final reply</h2>
+      <p class="desc">Adds a low-confidence disclaimer when <code style="font-family:var(--font-mono)">confident=False</code>, an "insufficient information" notice if the model admitted it didn't know, and always appends a best-match-score footer.</p>
+      <div class="events">
+        <span class="in">ResponseReadyEvent</span><span class="arrow">→</span><span class="out">StopEvent</span>
+      </div>
+    </article>
+    <div class="connector"></div>
+
+    <div class="pill">
+      <span class="pill-label">Answer returned to user</span>
+      <code>StopEvent(result=...)</code>
+    </div>
+
+  </main>
+
+  <p class="source-note">Generated from <code>rag_workflow.py</code> — see the file for the exact prompts and fallback logic behind each step.</p>
+
+</div>
+</body>
+</html>
